@@ -9,15 +9,15 @@ from bs4 import BeautifulSoup
 uri = 'https://www.powershellgallery.com/packages/VMware.VimAutomation.Custom'
 script_path = os.path.dirname(os.path.realpath(__file__))
 previous_count_path = f'{script_path}/vmware.vimautomation.custom_count'
-slack_webhook_path = f'{script_path}/slack_webhook'
+slack_webhook_url_path = f'{script_path}/slack_webhook_url'
 
-if os.path.exists(slack_webhook_path):
-    with open(slack_webhook_path, 'r') as f:
-        webhook = f.read()
+if os.path.exists(slack_webhook_url_path):
+    with open(slack_webhook_url_path, 'r') as f:
+        slack_webhook_url = f.read()
 else:
-    webhook = input('Slack Webook: ')
-    with open(slack_webhook_path, 'w') as f:
-        f.write(webhook)
+    slack_webhook_url = input('Slack Webook: ')
+    with open(slack_webhook_url_path, 'w') as f:
+        f.write(slack_webhook_url)
 
 request = requests.get(uri)
 soup = BeautifulSoup(request.content, 'html.parser')
@@ -36,7 +36,7 @@ if previous_count < count:
             'username': 'Python'
         }
         response = requests.post(
-            webhook, json=slack_msg, headers={'Content-Type': 'application/json'}
+            slack_webhook_url, json=slack_msg, headers={'Content-Type': 'application/json'}
         )
     except:
         raise ValueError(
