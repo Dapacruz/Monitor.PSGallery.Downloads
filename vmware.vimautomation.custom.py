@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 uri = 'https://www.powershellgallery.com/packages/VMware.VimAutomation.Custom'
 script_path = os.path.dirname(os.path.realpath(__file__))
 count_path = f'{script_path}/vmware.vimautomation.custom_count'
-webhook_path = f'{script_path}/webhook'
+webhook_path = f'{script_path}/slack_webhook'
 
 with open(webhook_path, 'r') as f:
     webhook = f.read()
