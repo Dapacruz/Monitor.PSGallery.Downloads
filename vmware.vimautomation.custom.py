@@ -15,7 +15,7 @@ if os.path.exists(slack_webhook_url_path):
     with open(slack_webhook_url_path, 'r') as f:
         slack_webhook_url = f.read()
 else:
-    slack_webhook_url = input('Slack Webook: ')
+    slack_webhook_url = input('Slack Webhook URL: ')
     with open(slack_webhook_url_path, 'w') as f:
         f.write(slack_webhook_url)
 
