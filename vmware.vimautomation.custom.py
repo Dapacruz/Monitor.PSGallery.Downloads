@@ -8,18 +8,26 @@ from bs4 import BeautifulSoup
 
 uri = 'https://www.powershellgallery.com/packages/VMware.VimAutomation.Custom'
 script_path = os.path.dirname(os.path.realpath(__file__))
-count_path = f'{script_path}/vmware.vimautomation.custom_count'
-webhook_path = f'{script_path}/slack_webhook'
+previous_count_path = f'{script_path}/vmware.vimautomation.custom_count'
+slack_webhook_path = f'{script_path}/slack_webhook'
 
-with open(webhook_path, 'r') as f:
-    webhook = f.read()
+if os.path.exists(slack_webhook_path):
+    with open(slack_webhook_path, 'r') as f:
+        webhook = f.read()
+else:
+    webhook = input('Slack Webook: ')
+    with open(slack_webhook_path, 'w') as f:
+        f.write(webhook)
 
 request = requests.get(uri)
 soup = BeautifulSoup(request.content, 'html.parser')
 count = int(soup.find('p', class_='stat-number').text)
 
-with open(count_path, mode='r') as f:
-    previous_count = int(f.read())
+if os.path.exists(previous_count_path):
+    with open(previous_count_path, 'r') as f:
+        previous_count = int(f.read())
+else:
+    previous_count = 0
 
 if previous_count < count:
     try:
@@ -35,5 +43,5 @@ if previous_count < count:
             f'Request to slack returned an error {response.status_code}, the response is:\n{response.text}'
         )
 
-with open(count_path, mode='w') as f:
+with open(previous_count_path, 'w') as f:
     f.write(str(count))
