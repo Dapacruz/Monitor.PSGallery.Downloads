@@ -1,57 +1,82 @@
 #!/usr/bin/env python3.6
 
-# Track the download count of my VMware.VimAutomation.Custom module
+'''Track the download count of my VMware.VimAutomation.Custom module'''
 
 import logging
+import logging.handlers
 import os
 import requests
 from bs4 import BeautifulSoup
 
+logging_level = logging.DEBUG
 uri = 'https://www.powershellgallery.com/packages/VMware.VimAutomation.Custom'
 script_path = os.path.dirname(os.path.realpath(__file__))
 log_path = f'{script_path}/vmware.vimautomation.custom.log'
 previous_count_path = f'{script_path}/vmware.vimautomation.custom_count'
 slack_webhook_url_path = f'{script_path}/slack_webhook_url'
 
-logging.basicConfig(filename=log_path, level=logging.DEBUG, format='%(asctime)s:%(levelname)s:%(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+fh_formatter = logging.Formatter('%(asctime)s %(levelname)s : %(message)s')
+fh = logging.handlers.RotatingFileHandler(log_path, maxBytes=25000000, backupCount=3)
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(fh_formatter)
+logger.addHandler(fh)
+
+ch = logging.StreamHandler()
+ch_formatter = logging.Formatter('%(message)s')
+ch.setLevel(logging_level)
+ch.setFormatter(ch_formatter)
+logger.addHandler(ch)
 
 if os.path.exists(slack_webhook_url_path):
+    logger.debug('Loading Slack webhook URL')
     with open(slack_webhook_url_path, 'r') as f:
         slack_webhook_url = f.read()
-        logging.debug(f'slack_webhook_url variable: {slack_webhook_url}')
+        logger.debug(f'slack_webhook_url = {slack_webhook_url}')
 else:
+    logger.debug('Prompting for Slack webhook URL')
     slack_webhook_url = input('Slack Webhook URL: ')
-    logging.debug(f'Slack webhook URL file is missing, promted user.\nslack_webhook_url variable: {slack_webhook_url}')
+    logger.debug(f'Slack webhook URL file is missing, promted user.\nslack_webhook_url variable: {slack_webhook_url}')
     with open(slack_webhook_url_path, 'w') as f:
         f.write(slack_webhook_url)
 
-request = requests.get(uri)
-logging.debug(f'request variable: {request}')
-soup = BeautifulSoup(request.content, 'html.parser')
-count = int(soup.find('p', class_='stat-number').text)
-logging.debug(f'count variable: {count}')
+try:
+    logger.debug(f'Requesting {uri}')
+    request = requests.get(uri)
+    logger.debug(f'Request Status Code: {request.status_code}')
+except Exception as e:
+    logger.critical(f'Web request failed:\n{e}')
+    raise
 
+logger.debug('Parsing current count')
+soup = BeautifulSoup(request.content, 'html.parser')
+current_count = int(soup.find('p', class_='stat-number').text)
+logger.debug(f'count = {current_count}')
+
+logger.debug('Loading previous count')
 if os.path.exists(previous_count_path):
     with open(previous_count_path, 'r') as f:
         previous_count = int(f.read())
-        logging.debug(f'previous_count variable: {previous_count}')
+        logger.debug(f'previous_count = {previous_count}')
 else:
     previous_count = 0
-    logging.debug(f'previous_count file missing, setting to default value.\nprevious_count variable: {previous_count}')
+    logger.debug(f'previous_count file missing, setting to default value.\nprevious_count variable: {previous_count}')
 
-if previous_count < count:
+logger.debug('Checking if previous count is less than current count')
+if previous_count < current_count:
     try:
+        logger.debug('Sending Slack message')
         slack_msg = {
-            'text': f'You now have {count} downloads of your VMware.VimAutomation.Custom module!',
+            'text': f'You now have {current_count} downloads of your VMware.VimAutomation.Custom module!',
             'username': 'Python'
         }
-        response = requests.post(
-            slack_webhook_url, json=slack_msg, headers={'Content-Type': 'application/json'}
-        )
-    except:
-        msg = f'Request to slack returned an error {response.status_code}, the response is:\n{response.text}'
-        logging.warn(msg)
-        raise ValueError(msg)
+        requests.post(slack_webhook_url, json=slack_msg, headers={'Content-Type': 'application/json'})
+    except Exception as e:
+        logger.critical(f'Post to Slack failed:\n{e}')
+        raise
 
-with open(previous_count_path, 'w') as f:
-    f.write(str(count))
+    logger.debug('Saving current count')
+    with open(previous_count_path, 'w') as f:
+        f.write(str(current_count))
