@@ -9,6 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 
 logging_level = logging.DEBUG
+module_name = 'VMware.VimAutomation.Custom'
 uri = 'https://www.powershellgallery.com/packages/VMware.VimAutomation.Custom'
 script_path = os.path.dirname(os.path.realpath(__file__))
 log_path = f'{script_path}/vmware.vimautomation.custom.log'
@@ -69,8 +70,8 @@ if previous_count < current_count:
     try:
         logger.debug('Sending Slack message')
         slack_msg = {
-            'text': f'You now have {current_count} downloads of your VMware.VimAutomation.Custom module!',
-            'username': 'Python'
+            'text': f'You now have {current_count} downloads of your {module_name} module!',
+            'username': 'PowerShell Gallery'
         }
         requests.post(slack_webhook_url, json=slack_msg, headers={'Content-Type': 'application/json'})
     except Exception as e:
