@@ -34,7 +34,7 @@ logger.addHandler(ch)
 if os.path.exists(slack_webhook_url_path):
     logger.debug('Loading Slack webhook URL')
     with open(slack_webhook_url_path, 'r') as f:
-        slack_webhook_url = f.read()
+        slack_webhook_url = f.read().strip()
         logger.debug(f'slack_webhook_url = {slack_webhook_url}')
 else:
     logger.debug('Prompting for Slack webhook URL')
