@@ -1,4 +1,4 @@
-vmware.vimautomation.custom_count
+*_count
 slack_webhook_url
-vmware.vimautomation.custom.log*
+*.log*
 launch.json
