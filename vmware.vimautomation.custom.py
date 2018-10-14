@@ -13,7 +13,7 @@ logging_level = logging.DEBUG
 module_name = 'VMware.VimAutomation.Custom'
 uri = 'https://www.powershellgallery.com/packages/VMware.VimAutomation.Custom'
 script_path = os.path.dirname(os.path.realpath(__file__))
-log_path = f'{script_path}/vmware.vimautomation.custom.log'
+log_path = f'{script_path}/logs/vmware.vimautomation.custom.log'
 previous_count_path = f'{script_path}/vmware.vimautomation.custom_count'
 slack_webhook_url_path = f'{script_path}/slack_webhook_url'
 
@@ -55,7 +55,19 @@ except Exception as e:
 logger.debug('Parsing current count')
 soup = BeautifulSoup(request.content, 'html.parser')
 current_count = int(re.search('.*?(\d+).*', soup.find('ul', class_='list-unstyled ms-Icon-ul').li.h2.text).group(1))
-logger.debug(f'current_count = {current_count}')
+if current_count:
+    logger.debug(f'current_count = {current_count}')
+else:
+    try:
+        logger.debug('Sending Slack message')
+        slack_msg = {
+            'text': f'Failed to parse the {module_name} module current download count!',
+            'username': 'PowerShell Gallery'
+        }
+        requests.post(slack_webhook_url, json=slack_msg, headers={'Content-Type': 'application/json'})
+    except Exception as e:
+        logger.critical(f'Post to Slack failed:\n{e}')
+        raise
 
 logger.debug('Loading previous count')
 if os.path.exists(previous_count_path):
