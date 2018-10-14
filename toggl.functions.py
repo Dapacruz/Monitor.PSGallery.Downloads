@@ -8,6 +8,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import re
+from datetime import datetime
 
 logging_level = logging.DEBUG
 module_name = 'Toggl.Functions'
@@ -57,7 +58,7 @@ soup = BeautifulSoup(request.content, 'html.parser')
 current_count = int(re.search('.*?(\d+).*', soup.find('ul', class_='list-unstyled ms-Icon-ul').li.h2.text).group(1))
 if current_count:
     logger.debug(f'current_count = {current_count}')
-else:
+elif datetime.now().minute == 00:
     try:
         logger.debug('Sending Slack message')
         slack_msg = {
