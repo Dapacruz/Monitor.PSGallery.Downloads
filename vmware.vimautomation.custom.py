@@ -7,6 +7,7 @@ import logging.handlers
 import os
 import requests
 from bs4 import BeautifulSoup
+import re
 
 logging_level = logging.DEBUG
 module_name = 'VMware.VimAutomation.Custom'
@@ -53,8 +54,8 @@ except Exception as e:
 
 logger.debug('Parsing current count')
 soup = BeautifulSoup(request.content, 'html.parser')
-current_count = int(soup.find('p', class_='stat-number').text)
-logger.debug(f'count = {current_count}')
+current_count = int(re.search('.*?(\d+).*', soup.find('ul', class_='list-unstyled ms-Icon-ul').li.h2.text).group(1))
+logger.debug(f'current_count = {current_count}')
 
 logger.debug('Loading previous count')
 if os.path.exists(previous_count_path):
