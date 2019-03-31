@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 '''Track the download count of my Toggl.Functions module'''
 
